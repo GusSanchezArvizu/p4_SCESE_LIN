@@ -24,17 +24,17 @@
 
 /*! @brief The UART to use for debug messages. */
 #define BOARD_DEBUG_UART_TYPE     kSerialPort_Uart
-#define BOARD_DEBUG_UART_BASEADDR (uint32_t) FLEXCOMM3
-#define BOARD_DEBUG_UART_INSTANCE 3U
-#define BOARD_DEBUG_UART          USART3
-#define BOARD_DEBUG_UART_CLK_FREQ CLOCK_GetFlexCommClkFreq(3)
+#define BOARD_DEBUG_UART_BASEADDR (uint32_t) FLEXCOMM0
+#define BOARD_DEBUG_UART_INSTANCE 0U
+#define BOARD_DEBUG_UART          USART0
+#define BOARD_DEBUG_UART_CLK_FREQ CLOCK_GetFlexCommClkFreq(0)
 #define BOARD_DEBUG_UART_FRG_CLK \
-    (&(const clock_frg_clk_config_t){3, kCLOCK_FrgPllDiv, 255, 0}) /*!< Select FRG3 mux as frg_pll */
-#define BOARD_DEBUG_UART_CLK_ATTACH kFRG_to_FLEXCOMM3
-#define BOARD_DEBUG_UART_RST        kFC3_RST_SHIFT_RSTn
-#define BOARD_DEBUG_UART_CLKSRC     kCLOCK_Flexcomm3
-#define BOARD_UART_IRQ_HANDLER      FLEXCOMM3_IRQHandler
-#define BOARD_UART_IRQ              FLEXCOMM3_IRQn
+    (&(const clock_frg_clk_config_t){0, kCLOCK_FrgPllDiv, 255, 0}) /*!< FRG0 mux */
+#define BOARD_DEBUG_UART_CLK_ATTACH kFRG_to_FLEXCOMM0
+#define BOARD_DEBUG_UART_RST        kFC0_RST_SHIFT_RSTn
+#define BOARD_DEBUG_UART_CLKSRC     kCLOCK_Flexcomm0
+#define BOARD_UART_IRQ_HANDLER      FLEXCOMM0_IRQHandler
+#define BOARD_UART_IRQ              FLEXCOMM0_IRQn
 
 #ifndef BOARD_DEBUG_UART_BAUDRATE
 #define BOARD_DEBUG_UART_BAUDRATE 115200
