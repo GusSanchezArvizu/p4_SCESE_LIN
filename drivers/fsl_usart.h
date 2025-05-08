@@ -97,6 +97,25 @@ typedef enum _usart_clock_polarity
     kUSART_RxSampleOnRisingEdge  = 0x1U, /*!< Un_RXD is sampled on the rising edge of SCLK. */
 } usart_clock_polarity_t;
 
+typedef enum _usart_lin_mode
+{
+	kUSART_LINModeEnable = 0x1U,
+	kUSART_LINModeDisabled = 0x0U,
+}usart_lin_mode_t;
+
+typedef enum _usart_lin_txbreak
+{
+	kUSART_LINTxBreakEnable = 0x1U, /*!< Continuous break */
+	kUSART_LINTxBreakDisabled = 0x0U, /*!< Normal operation */
+}usart_lin_txbreak;
+
+typedef enum _usart_lin_autobaud
+{
+	kUSART_LINAutobaudEnable = 0x1U, /*!< Autobaud enabled */
+	kUSART_LINAutobaudDisable = 0x0U, /*!< Autobaud disabled */
+}usart_lin_autobaud;
+
+
 /*! @brief txFIFO watermark values */
 typedef enum _usart_txfifo_watermark
 {
@@ -223,6 +242,9 @@ typedef struct _usart_config
     usart_rxfifo_watermark_t rxWatermark; /*!< rxFIFO watermark */
     usart_sync_mode_t syncMode; /*!< Transfer mode select - asynchronous, synchronous master, synchronous slave. */
     usart_clock_polarity_t clockPolarity; /*!< Selects the clock polarity and sampling edge in synchronous mode. */
+    usart_lin_mode_t linMode;
+    usart_lin_txbreak linTxBreak;
+    usart_lin_autobaud linAutobaud;
 #if defined(FSL_FEATURE_USART_HAS_FIFORXTIMEOUTCFG) && FSL_FEATURE_USART_HAS_FIFORXTIMEOUTCFG
     usart_rx_timeout_config rxTimeout; /*!< rx timeout configuration */
 #endif

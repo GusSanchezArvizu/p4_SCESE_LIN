@@ -82,6 +82,9 @@ int main(void)
     config.baudRate_Bps = BOARD_DEBUG_UART_BAUDRATE;
     config.enableTx     = true;
     config.enableRx     = true;
+    config.linMode		= (0U);
+    config.linTxBreak	= (0U);
+    config.linAutobaud	= (0U);
 
     USART_Init(DEMO_USART, &config, DEMO_USART_CLK_FREQ);
     USART_TransferCreateHandle(DEMO_USART, &g_uartHandle, USART_UserCallback, NULL);
