@@ -43,8 +43,8 @@ LIN_tx_status_t LIN_tx(LIN_Frame_t frame);
 
 LIN_rx_status_t LIN_rx();
 
-void LIN_parse(LIN_Frame_t frame);
+static void LIN_parse(LIN_Frame_t frame);
 
-LIN_checksum_status_t LIN_check(LIN_Frame_t frame);
+static uint8_t LIN_check(LIN_Frame_t frame);
 
 #endif /* LIN_H_ */
