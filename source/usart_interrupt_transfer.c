@@ -5,7 +5,7 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
+#include "LIN.h"
 #include "board.h"
 #include "app.h"
 #include "fsl_usart.h"
@@ -82,18 +82,18 @@ int main(void)
     config.baudRate_Bps = BOARD_DEBUG_UART_BAUDRATE;
     config.enableTx     = true;
     config.enableRx     = true;
-    config.linMode		= (0U);
+    config.linMode		= (1U);
     config.linTxBreak	= (0U);
     config.linAutobaud	= (0U);
 
     USART_Init(DEMO_USART, &config, DEMO_USART_CLK_FREQ);
-    USART_TransferCreateHandle(DEMO_USART, &g_uartHandle, USART_UserCallback, NULL);
+    //USART_TransferCreateHandle(DEMO_USART, &g_uartHandle, USART_UserCallback, NULL);
 
     /* Send g_tipString out. */
-    xfer.data     = g_tipString;
-    xfer.dataSize = sizeof(g_tipString) - 1;
-    txOnGoing     = true;
-    USART_TransferSendNonBlocking(DEMO_USART, &g_uartHandle, &xfer);
+//    xfer.data     = g_tipString;
+//    xfer.dataSize = sizeof(g_tipString) - 1;
+//    txOnGoing     = true;
+//    USART_TransferSendNonBlocking(DEMO_USART, &g_uartHandle, &xfer);
 
     /* Wait send finished */
     while (txOnGoing)
@@ -106,28 +106,37 @@ int main(void)
     receiveXfer.data     = g_rxBuffer;
     receiveXfer.dataSize = sizeof(g_rxBuffer);
 
+    uint8_t payload[] = { 0xA1, 0xB2, 0xC3 };
+
+    LIN_Frame_t myFrame;
+    myFrame.identifier = 12U;
+    memcpy(myFrame.data, payload, myFrame.data_length);
+    myFrame.data_length = 3U;
     while (1)
     {
-        /* If RX is idle and g_rxBuffer is empty, start to read data to g_rxBuffer. */
-        if ((!rxOnGoing) && rxBufferEmpty)
-        {
-            rxOnGoing = true;
-            USART_TransferReceiveNonBlocking(DEMO_USART, &g_uartHandle, &receiveXfer, NULL);
-        }
 
-        /* If TX is idle and g_txBuffer is full, start to send data. */
-        if ((!txOnGoing) && txBufferFull)
-        {
-            txOnGoing = true;
-            USART_TransferSendNonBlocking(DEMO_USART, &g_uartHandle, &sendXfer);
-        }
-
-        /* If g_txBuffer is empty and g_rxBuffer is full, copy g_rxBuffer to g_txBuffer. */
-        if ((!rxBufferEmpty) && (!txBufferFull))
-        {
-            memcpy(g_txBuffer, g_rxBuffer, ECHO_BUFFER_LENGTH);
-            rxBufferEmpty = true;
-            txBufferFull  = true;
-        }
+    	LIN_tx(myFrame);
+    	for(int i=0; i< 10000000; i++);
+//        /* If RX is idle and g_rxBuffer is empty, start to read data to g_rxBuffer. */
+//        if ((!rxOnGoing) && rxBufferEmpty)
+//        {
+//            rxOnGoing = true;
+//            USART_TransferReceiveNonBlocking(DEMO_USART, &g_uartHandle, &receiveXfer, NULL);
+//        }
+//
+//        /* If TX is idle and g_txBuffer is full, start to send data. */
+//        if ((!txOnGoing) && txBufferFull)
+//        {
+//            txOnGoing = true;
+//            USART_TransferSendNonBlocking(DEMO_USART, &g_uartHandle, &sendXfer);
+//        }
+//
+//        /* If g_txBuffer is empty and g_rxBuffer is full, copy g_rxBuffer to g_txBuffer. */
+//        if ((!rxBufferEmpty) && (!txBufferFull))
+//        {
+//            memcpy(g_txBuffer, g_rxBuffer, ECHO_BUFFER_LENGTH);
+//            rxBufferEmpty = true;
+//            txBufferFull  = true;
+//        }
     }
 }
