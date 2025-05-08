@@ -83,8 +83,8 @@ int main(void)
     config.enableTx     = true;
     config.enableRx     = true;
     config.linMode		= (1U);
-    config.linTxBreak	= (0U);
-    config.linAutobaud	= (0U);
+    config.linTxBreak	= (1U);
+    config.linAutobaud	= (1U);
 
     USART_Init(DEMO_USART, &config, DEMO_USART_CLK_FREQ);
     //USART_TransferCreateHandle(DEMO_USART, &g_uartHandle, USART_UserCallback, NULL);
@@ -109,9 +109,10 @@ int main(void)
     uint8_t payload[] = { 0xA1, 0xB2, 0xC3 };
 
     LIN_Frame_t myFrame;
-    myFrame.identifier = 12U;
-    memcpy(myFrame.data, payload, myFrame.data_length);
+    myFrame.identifier = 0x12;
     myFrame.data_length = 3U;
+    memcpy(myFrame.data, payload, myFrame.data_length);
+
     while (1)
     {
 

@@ -42,7 +42,12 @@ LIN_tx_status_t LIN_tx(LIN_Frame_t frame)
     }
 
 }
-
+/*!
+ * @fn void LIN_SendHeader(uint8_t)
+ * @brief Sends header before data
+ *
+ * @param id
+ */
 static void LIN_SendHeader(uint8_t id) {
     // Paso 1: Deshabilita transmisor
     USART0->CTL |= (1 << 6); // TXDIS
@@ -67,6 +72,13 @@ static void LIN_SendHeader(uint8_t id) {
    // while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
 }
 
+/*!
+ * @fn uint8_t LIN_CalculateID(uint8_t)
+ * @brief Makes the operation for id and parity bits
+ *
+ * @param id
+ * @return
+ */
 static uint8_t LIN_CalculateID(uint8_t id) {
     id &= 0x3F;  // Asegura que solo los bits ID0–ID5 estén activos
 
@@ -83,6 +95,14 @@ static uint8_t LIN_CalculateID(uint8_t id) {
     return id | (p0 << 6) | (p1 << 7);
 }
 
+
+/*!
+ * @fn uint8_t LIN_check(LIN_Frame_t)
+ * @brief Obtain the checksum of the sent frame
+ *
+ * @param frame
+ * @return
+ */
 uint8_t LIN_check(LIN_Frame_t frame)
 {
     uint16_t sum = frame.identifier;  // Inicia con el ID incluido (mejorado)
