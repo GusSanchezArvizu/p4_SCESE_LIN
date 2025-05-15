@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #define LIN_MAX_DATA_LENGTH 8
+#define ECHO_BUFFER_LENGTH 1
 
 typedef enum
 {
@@ -42,6 +43,10 @@ void LIN_init();
 LIN_tx_status_t LIN_tx(LIN_Frame_t frame);
 
 LIN_rx_status_t LIN_rx();
+
+void LIN_SendHeader();
+
+uint8_t LIN_CalculateID(uint8_t id);
 
 static void LIN_parse(LIN_Frame_t frame);
 

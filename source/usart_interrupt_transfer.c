@@ -9,12 +9,12 @@
 #include "board.h"
 #include "app.h"
 #include "fsl_usart.h"
+#include "led_rgb.h"
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define ECHO_BUFFER_LENGTH 8
-
+#define TEST 1
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -25,7 +25,7 @@ void USART_UserCallback(USART_Type *base, usart_handle_t *handle, status_t statu
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-usart_handle_t g_uartHandle;
+usart_handle_t g_usartHandle;
 
 uint8_t g_tipString[] =
     "Usart interrupt example\r\nBoard receives 8 characters then sends them out\r\nNow please input:\r\n";
@@ -36,6 +36,11 @@ volatile bool rxBufferEmpty            = true;
 volatile bool txBufferFull             = false;
 volatile bool txOnGoing                = false;
 volatile bool rxOnGoing                = false;
+volatile bool txFinished;
+volatile bool rxFinished;
+uint8_t receivedID;
+
+volatile bool lin_headerReceived = false;
 
 /*******************************************************************************
  * Code
@@ -47,12 +52,14 @@ void USART_UserCallback(USART_Type *base, usart_handle_t *handle, status_t statu
 
     if (kStatus_USART_TxIdle == status)
     {
+        txFinished = true;
         txBufferFull = false;
         txOnGoing    = false;
     }
 
     if (kStatus_USART_RxIdle == status)
     {
+        rxFinished = true;
         rxBufferEmpty = false;
         rxOnGoing     = false;
     }
@@ -69,6 +76,7 @@ int main(void)
     usart_transfer_t receiveXfer;
 
     BOARD_InitHardware();
+    rgb_led_init();
 
     /*
      * config.baudRate_Bps = 115200U;
@@ -87,22 +95,8 @@ int main(void)
     config.linAutobaud	= (0U);
 
     USART_Init(DEMO_USART, &config, DEMO_USART_CLK_FREQ);
-    //USART_TransferCreateHandle(DEMO_USART, &g_uartHandle, USART_UserCallback, NULL);
+    USART_TransferCreateHandle(DEMO_USART, &g_usartHandle, USART_UserCallback, NULL);
 
-    /* Send g_tipString out. */
-//    xfer.data     = g_tipString;
-//    xfer.dataSize = sizeof(g_tipString) - 1;
-//    txOnGoing     = true;
-//    USART_TransferSendNonBlocking(DEMO_USART, &g_uartHandle, &xfer);
-
-    /* Wait send finished */
-    while (txOnGoing)
-    {
-    }
-
-    /* Start to echo. */
-    sendXfer.data        = g_txBuffer;
-    sendXfer.dataSize    = sizeof(g_txBuffer);
     receiveXfer.data     = g_rxBuffer;
     receiveXfer.dataSize = sizeof(g_rxBuffer);
 
@@ -118,16 +112,30 @@ int main(void)
     {
     	deltaRxBrk = (USART0->STAT & USART_STAT_DELTARXBRK_MASK) >> USART_STAT_DELTARXBRK_SHIFT;
     	if (deltaRxBrk) {
-        	LIN_tx(myFrame);
+    		lin_headerReceived = true;
+    		rgb_led_turn_RED(LOGIC_LED_TOOGLE);
+    		USART_ReadBlocking(USART1, &receivedID, 1);
+
     	} else {
-			if ((!rxOnGoing) && rxBufferEmpty) {
-				rxOnGoing = true;
-				USART_TransferReceiveNonBlocking(DEMO_USART, &g_uartHandle, &receiveXfer, NULL);
-			}
+    		lin_headerReceived = false;
+    	    rxFinished = false;
+
+//    	    // Wait receive finished.
+//    	    while (!rxFinished)
+//    	    {
+//    	    }
     	}
 
-    	LIN_tx(myFrame);
-    	for(int i=0; i< 10000000; i++);
+#if (TEST)
+        // Prepare to send.
+    	for (uint8_t i = 1; i <= 5; i++) {
+    		txFinished = false;
+			uint8_t full_id = LIN_CalculateID(i);
+			LIN_SendHeader(full_id);
+			USART_WriteBlocking(USART0, &full_id, 1);
+			for(int i=0; i< 10000000; i++); //Delay
+    	    }
+#endif
 //        /* If RX is idle and g_rxBuffer is empty, start to read data to g_rxBuffer. */
 //        if ((!rxOnGoing) && rxBufferEmpty)
 //        {

@@ -8,10 +8,6 @@
 #include "fsl_usart.h"
 #include "RW612_COMMON.h"
 
-static uint8_t LIN_CalculateID(uint8_t id);
-
-static void LIN_SendHeader(uint8_t id);
-
 /*!
  * @fn LIN_tx_status_t LIN_tx(LIN_Frame_t)
  * @brief Sends frame via USART initialized
@@ -21,6 +17,7 @@ static void LIN_SendHeader(uint8_t id);
  */
 LIN_tx_status_t LIN_tx(LIN_Frame_t frame)
 {
+
     if (!(frame.data_length == 0 || frame.data_length > 8))
     {
         // 1. Calcular ID con paridad
@@ -48,7 +45,7 @@ LIN_tx_status_t LIN_tx(LIN_Frame_t frame)
  *
  * @param id
  */
-static void LIN_SendHeader(uint8_t id) {
+void LIN_SendHeader() {
     // Paso 1: Deshabilita transmisor
     //USART0->CTL |= (1 << 6); // TXDIS
     //while (!(USART0->STAT & (1 << 6))); // Espera TXDISSTAT
@@ -68,8 +65,8 @@ static void LIN_SendHeader(uint8_t id) {
     while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
 
     // Paso 5: Enviar ID (con bits de paridad incluidos)
-    USART0->FIFOWR = id;
-    while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
+//    USART0->FIFOWR = id;
+//    while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
 }
 
 /*!
@@ -79,7 +76,7 @@ static void LIN_SendHeader(uint8_t id) {
  * @param id
  * @return
  */
-static uint8_t LIN_CalculateID(uint8_t id) {
+uint8_t LIN_CalculateID(uint8_t id) {
     id &= 0x3F;  // Asegura que solo los bits ID0–ID5 estén activos
 
     uint8_t id0 = (id >> 0) & 0x01;
