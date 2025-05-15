@@ -45,7 +45,7 @@ LIN_tx_status_t LIN_tx(LIN_Frame_t frame)
  *
  * @param id
  */
-void LIN_SendHeader() {
+void LIN_SendHeader(uint8_t id) {
     // Paso 1: Deshabilita transmisor
     //USART0->CTL |= (1 << 6); // TXDIS
     //while (!(USART0->STAT & (1 << 6))); // Espera TXDISSTAT
@@ -65,8 +65,8 @@ void LIN_SendHeader() {
     while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
 
     // Paso 5: Enviar ID (con bits de paridad incluidos)
-//    USART0->FIFOWR = id;
-//    while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
+    USART0->FIFOWR = id;
+    while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
 }
 
 /*!

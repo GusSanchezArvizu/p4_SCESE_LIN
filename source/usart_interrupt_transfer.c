@@ -19,8 +19,7 @@
  * Prototypes
  ******************************************************************************/
 
-/* USART user callback */
-void USART_UserCallback(USART_Type *base, usart_handle_t *handle, status_t status, void *userData);
+
 
 /*******************************************************************************
  * Variables
@@ -38,8 +37,14 @@ volatile bool txOnGoing                = false;
 volatile bool rxOnGoing                = false;
 volatile bool txFinished;
 volatile bool rxFinished;
-uint8_t receivedID;
 
+uint8_t sendData[1] = {0};
+uint8_t receiveData[1] = {0};
+
+usart_transfer_t sendXfer;
+usart_transfer_t receiveXfer;
+
+uint8_t receivedID;
 volatile bool lin_headerReceived = false;
 
 /*******************************************************************************
@@ -59,6 +64,7 @@ void USART_UserCallback(USART_Type *base, usart_handle_t *handle, status_t statu
 
     if (kStatus_USART_RxIdle == status)
     {
+    	rgb_led_color_YELLOW();
         rxFinished = true;
         rxBufferEmpty = false;
         rxOnGoing     = false;
@@ -72,9 +78,7 @@ int main(void)
 {
     usart_config_t config;
     usart_transfer_t xfer;
-    usart_transfer_t sendXfer;
-    usart_transfer_t receiveXfer;
-
+    uint8_t i = 1;
     BOARD_InitHardware();
     rgb_led_init();
 
@@ -102,6 +106,7 @@ int main(void)
 
     uint8_t payload[] = { 0xA1, 0xB2, 0xC3 };
 	uint32_t deltaRxBrk;
+	uint32_t deltaRxBrkInt;
 
     LIN_Frame_t myFrame;
     myFrame.identifier = 0x12;
@@ -114,11 +119,10 @@ int main(void)
     	if (deltaRxBrk) {
     		lin_headerReceived = true;
     		rgb_led_turn_RED(LOGIC_LED_TOOGLE);
-    		USART_ReadBlocking(USART1, &receivedID, 1);
+    		uint8_t id = USART_ReadByte(USART0);
 
     	} else {
     		lin_headerReceived = false;
-    	    rxFinished = false;
 
 //    	    // Wait receive finished.
 //    	    while (!rxFinished)
@@ -127,35 +131,12 @@ int main(void)
     	}
 
 #if (TEST)
-        // Prepare to send.
-    	for (uint8_t i = 1; i <= 5; i++) {
-    		txFinished = false;
-			uint8_t full_id = LIN_CalculateID(i);
-			LIN_SendHeader(full_id);
-			USART_WriteBlocking(USART0, &full_id, 1);
-			for(int i=0; i< 10000000; i++); //Delay
-    	    }
+    	uint8_t full_id = LIN_CalculateID(i);
+		LIN_SendHeader(full_id);
+		for(int i=0; i< 100000000; i++); //Delay
+		(i == 5)?i=1:i++;
+
 #endif
-//        /* If RX is idle and g_rxBuffer is empty, start to read data to g_rxBuffer. */
-//        if ((!rxOnGoing) && rxBufferEmpty)
-//        {
-//            rxOnGoing = true;
-//            USART_TransferReceiveNonBlocking(DEMO_USART, &g_uartHandle, &receiveXfer, NULL);
-//        }
-//
-//        /* If TX is idle and g_txBuffer is full, start to send data. */
-//        if ((!txOnGoing) && txBufferFull)
-//        {
-//            txOnGoing = true;
-//            USART_TransferSendNonBlocking(DEMO_USART, &g_uartHandle, &sendXfer);
-//        }
-//
-//        /* If g_txBuffer is empty and g_rxBuffer is full, copy g_rxBuffer to g_txBuffer. */
-//        if ((!rxBufferEmpty) && (!txBufferFull))
-//        {
-//            memcpy(g_txBuffer, g_rxBuffer, ECHO_BUFFER_LENGTH);
-//            rxBufferEmpty = true;
-//            txBufferFull  = true;
-//        }
+
     }
 }
