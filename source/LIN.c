@@ -27,18 +27,18 @@ LIN_tx_status_t LIN_tx(LIN_Frame_t frame)
         uint8_t lin_id = LIN_CalculateID(frame.identifier);
 
         // 2. Enviar encabezado: break + sync + ID
-        LIN_SendHeader(lin_id);
+        //LIN_SendHeader(lin_id);
 
         // 3. Enviar datos
         for (uint8_t i = 0; i < frame.data_length; i++) {
             USART0->FIFOWR = frame.data[i];
-            //while (!(USART0->STAT & (1 << 3))); // Esperar TXIDLE
+            while (!(USART0->STAT & (1 << 3))); // Esperar TXIDLE
         }
 
         // 4. Calcular y enviar checksum
         uint8_t checksum = LIN_check(frame);
         USART0->FIFOWR = checksum;
-        //while (!(USART0->STAT & (1 << 3))); // Esperar TXIDLE
+        while (!(USART0->STAT & (1 << 3))); // Esperar TXIDLE
     }
 
 }
@@ -50,26 +50,26 @@ LIN_tx_status_t LIN_tx(LIN_Frame_t frame)
  */
 static void LIN_SendHeader(uint8_t id) {
     // Paso 1: Deshabilita transmisor
-    USART0->CTL |= (1 << 6); // TXDIS
+    //USART0->CTL |= (1 << 6); // TXDIS
     //while (!(USART0->STAT & (1 << 6))); // Espera TXDISSTAT
 
     // Paso 2: Enviar break
     USART0->CTL |= (1 << 1); // TXBRKEN
-    USART0->FIFOWR = 0x00;
-   // while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
+    USART0->FIFOWR = 0xFF;
+    while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
     USART0->CTL &= ~(1 << 1); // Fin break
 
     // Paso 3: Rehabilita transmisor
     USART0->CTL &= ~(1 << 6); // TXDIS = 0
-   // while (USART0->STAT & (1 << 6)); // Espera TXDISSTAT = 0
+    while (USART0->STAT & (1 << 6)); // Espera TXDISSTAT = 0
 
     // Paso 4: Enviar SYNC (0x55)
     USART0->FIFOWR = 0x55;
-   // while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
+    while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
 
     // Paso 5: Enviar ID (con bits de paridad incluidos)
     USART0->FIFOWR = id;
-   // while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
+    while (!(USART0->STAT & (1 << 3))); // Espera TXIDLE
 }
 
 /*!
