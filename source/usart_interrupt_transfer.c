@@ -84,7 +84,7 @@ int main(void)
     config.enableRx     = true;
     config.linMode		= (1U);
     config.linTxBreak	= (1U);
-    config.linAutobaud	= (1U);
+    config.linAutobaud	= (0U);
 
     USART_Init(DEMO_USART, &config, DEMO_USART_CLK_FREQ);
     //USART_TransferCreateHandle(DEMO_USART, &g_uartHandle, USART_UserCallback, NULL);
@@ -107,6 +107,7 @@ int main(void)
     receiveXfer.dataSize = sizeof(g_rxBuffer);
 
     uint8_t payload[] = { 0xA1, 0xB2, 0xC3 };
+	uint32_t deltaRxBrk;
 
     LIN_Frame_t myFrame;
     myFrame.identifier = 0x12;
@@ -115,6 +116,15 @@ int main(void)
 
     while (1)
     {
+    	deltaRxBrk = (USART0->STAT & USART_STAT_DELTARXBRK_MASK) >> USART_STAT_DELTARXBRK_SHIFT;
+    	if (deltaRxBrk) {
+        	LIN_tx(myFrame);
+    	} else {
+			if ((!rxOnGoing) && rxBufferEmpty) {
+				rxOnGoing = true;
+				USART_TransferReceiveNonBlocking(DEMO_USART, &g_uartHandle, &receiveXfer, NULL);
+			}
+    	}
 
     	LIN_tx(myFrame);
     	for(int i=0; i< 10000000; i++);
