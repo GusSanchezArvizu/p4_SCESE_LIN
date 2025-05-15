@@ -52,4 +52,6 @@ static void LIN_parse(LIN_Frame_t frame);
 
 static uint8_t LIN_check(LIN_Frame_t frame);
 
+void LIN_HandlerHeader(uint8_t receivedId);
+
 #endif /* LIN_H_ */

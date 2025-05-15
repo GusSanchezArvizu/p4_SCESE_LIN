@@ -100,7 +100,7 @@ void rgb_led_color_WHITE()
 	rgb_led_turn_GREEN(LOGIC_LED_ON);
 }
 
-void rgb_led_color_YELLOW()
+void rgb_led_color_CYAN()
 {
 	rgb_led_turn_all_off();
 	rgb_led_turn_BLUE(LOGIC_LED_ON);
@@ -116,7 +116,7 @@ void rgb_led_color_MAGENTA()
 	rgb_led_turn_GREEN(LOGIC_LED_OFF);
 }
 
-void rgb_led_color_CYAN()
+void rgb_led_color_YELLOW()
 {
 	rgb_led_turn_all_off();
 	rgb_led_turn_BLUE(LOGIC_LED_OFF);

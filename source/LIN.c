@@ -7,6 +7,60 @@
 #include "LIN.h"
 #include "fsl_usart.h"
 #include "RW612_COMMON.h"
+#include "led_rgb.h"
+#include "app.h"
+
+usart_handle_t g_usartHandle;
+/***
+ * TX
+***/
+usart_transfer_t sendXfer;
+volatile bool txFinished;
+/***
+ *RX
+***/
+usart_transfer_t receiveXfer;
+volatile bool rxFinished;
+uint8_t receiveData[1] = {0};
+
+/* USART user callback */
+void USART_UserCallback(USART_Type *base, usart_handle_t *handle, status_t status, void *userData)
+{
+    userData = userData;
+
+    if (kStatus_USART_TxIdle == status)
+    {
+        txFinished = true;
+    }
+
+    if (kStatus_USART_RxIdle == status)
+    {
+
+        rxFinished = true;
+    }
+}
+void LIN_init()
+{
+    usart_config_t config;
+	/*
+	 * config.baudRate_Bps = 115200U;
+	 * config.parityMode = kUSART_ParityDisabled;
+	 * config.stopBitCount = kUSART_OneStopBit;
+	 * config.loopback = false;
+	 * config.enableTx = false;
+	 * config.enableRx = false;
+	 */
+	USART_GetDefaultConfig(&config);
+	config.baudRate_Bps = 19200;
+	config.enableTx     = true;
+	config.enableRx     = true;
+	config.linMode		= (1U);
+	config.linTxBreak	= (1U);
+	config.linAutobaud	= (0U);
+
+	USART_Init(DEMO_USART, &config, DEMO_USART_CLK_FREQ);
+	USART_TransferCreateHandle(DEMO_USART, &g_usartHandle, USART_UserCallback, NULL);
+}
 
 /*!
  * @fn LIN_tx_status_t LIN_tx(LIN_Frame_t)
@@ -17,27 +71,24 @@
  */
 LIN_tx_status_t LIN_tx(LIN_Frame_t frame)
 {
+    uint8_t sendData[LIN_MAX_DATA_LENGTH + 1];  // Datos + Checksum
 
-    if (!(frame.data_length == 0 || frame.data_length > 8))
-    {
-        // 1. Calcular ID con paridad
-        uint8_t lin_id = LIN_CalculateID(frame.identifier);
+    for (uint8_t i = 0; i < frame.data_length; i++) {
+        sendData[i] = frame.data[i];
+    }
+    sendData[frame.data_length] = LIN_check(frame);
+    sendXfer.data = sendData;
+    sendXfer.dataSize = frame.data_length + 1;
+    txFinished = false;
 
-        // 2. Enviar encabezado: break + sync + ID
-        //LIN_SendHeader(lin_id);
+    if (USART_TransferSendNonBlocking(USART0, &g_usartHandle, &sendXfer) != kStatus_Success)
+        return LIN_TX_SENT_FAILURE;
 
-        // 3. Enviar datos
-        for (uint8_t i = 0; i < frame.data_length; i++) {
-            USART0->FIFOWR = frame.data[i];
-            while (!(USART0->STAT & (1 << 3))); // Esperar TXIDLE
-        }
-
-        // 4. Calcular y enviar checksum
-        uint8_t checksum = LIN_check(frame);
-        USART0->FIFOWR = checksum;
-        while (!(USART0->STAT & (1 << 3))); // Esperar TXIDLE
+    while (!txFinished) {
+        __NOP();
     }
 
+    return LIN_TX_SENT_CORRECTLY;
 }
 /*!
  * @fn void LIN_SendHeader(uint8_t)
@@ -111,4 +162,38 @@ uint8_t LIN_check(LIN_Frame_t frame)
     }
 
     return (uint8_t)(~sum);  // Complemento a uno
+}
+
+void LIN_HandlerHeader(uint8_t receivedId) {
+
+	switch(receivedId)
+	{
+	case 1:
+		rgb_led_color_WHITE();
+		break;
+	case 2:
+	    LIN_Frame_t slave2;
+	    slave2.identifier = 0x40;               // Ejemplo de ID
+	    slave2.data_length = 2;
+	    slave2.data[0] = 0x22;                  // Datos de ejemplo
+	    slave2.data[1] = 0x11;
+	    LIN_tx(slave2);
+		break;
+	case 3:
+	    LIN_Frame_t slave3;
+	    slave3.identifier = 0x41;               // Ejemplo de ID
+	    slave3.data_length = 2;
+	    slave3.data[0] = 0x33;                  // Datos de ejemplo
+	    slave3.data[1] = 0xAC;
+	    LIN_tx(slave3);
+		break;
+	case 4:
+		rgb_led_color_MAGENTA();
+		break;
+	case 5:
+		rgb_led_color_YELLOW();
+		break;
+	default:
+		break;
+	}
 }
